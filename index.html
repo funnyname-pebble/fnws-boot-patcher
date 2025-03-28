@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FNWS Boot URL Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            display: none;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rebble to FNWS Boot URL Converter</h1>
+    
+    <div class="container">
+        <p>Currently FNWS doesn't implement everything that Rebble does, so take your Rebble Boot URL and overwrite parts that we <b>do</b> implement with our services.</p>
+        <p>Please check out the Rebble Project, they are absolutely amazing and have done a lot of work to keep Pebble alive. This is just a fun hobby project for me, and I don't intend to replace their work.</p>
+        
+        <div class="form-group">
+            <label for="rebbleUrl">Rebble Boot URL:</label>
+            <input type="text" id="rebbleUrl" placeholder="pebble://custom-boot-config-url/https%3A%2F%2Fboot.rebble.io%2Fapi%2Fstage2%2F%3Faccess_token%3Dxxx">
+        </div>
+        
+        <button onclick="convertUrl()">Convert to FNWS</button>
+        
+        <div id="error" class="error"></div>
+        
+        <div id="result">
+            <h3>FNWS Boot URL:</h3>
+            <p id="fnwsUrl"></p>
+            <button onclick="copyToClipboard()">Copy to Clipboard</button>
+        </div>
+    </div>
+    
+    <script>
+        function convertUrl() {
+            const rebbleUrl = document.getElementById('rebbleUrl').value.trim();
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+            
+            // Reset error and result
+            errorDiv.textContent = '';
+            resultDiv.style.display = 'none';
+            
+            // Check if URL is provided
+            if (!rebbleUrl) {
+                errorDiv.textContent = 'Please enter a Rebble boot URL.';
+                return;
+            }
+            
+            // Check if URL has correct format
+            if (!rebbleUrl.startsWith('pebble://custom-boot-config-url/')) {
+                errorDiv.textContent = 'Invalid URL format. URL should start with "pebble://custom-boot-config-url/".';
+                return;
+            }
+            
+            try {
+                // Extract the encoded URL part
+                const encodedPart = rebbleUrl.substring('pebble://custom-boot-config-url/'.length);
+                
+                // Decode it
+                const decodedUrl = decodeURIComponent(encodedPart);
+                
+                // Check if it's a Rebble URL
+                if (!decodedUrl.includes('boot.rebble.io')) {
+                    errorDiv.textContent = 'This does not appear to be a Rebble boot URL.';
+                    return;
+                }
+                
+                // Replace rebble.io with fnws.funnyna.me
+                const fnwsDecodedUrl = decodedUrl.replace('boot.rebble.io/api/stage2/', 'boot.fnws.funnyna.me/');
+                
+                // Re-encode the URL
+                const fnwsEncodedUrl = encodeURIComponent(fnwsDecodedUrl);
+                
+                // Create the final FNWS URL
+                const fnwsUrl = `pebble://custom-boot-config-url/${fnwsEncodedUrl}`;
+                
+                // Show the result
+                document.getElementById('fnwsUrl').textContent = fnwsUrl;
+                resultDiv.style.display = 'block';
+            } catch (e) {
+                errorDiv.textContent = 'Error processing URL: ' + e.message;
+            }
+        }
+        
+        function copyToClipboard() {
+            const fnwsUrl = document.getElementById('fnwsUrl').textContent;
+            
+            navigator.clipboard.writeText(fnwsUrl)
+                .then(() => {
+                    alert('URL copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = fnwsUrl;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('URL copied to clipboard!');
+                });
+        }
+    </script>
+</body>
+</html>
