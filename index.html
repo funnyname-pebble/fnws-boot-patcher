@@ -74,14 +74,20 @@
             <input type="text" id="rebbleUrl" placeholder="pebble://custom-boot-config-url/https%3A%2F%2Fboot.rebble.io%2Fapi%2Fstage2%2F%3Faccess_token%3Dxxx">
         </div>
         
+        <div class="form-group">
+            <label for="asrUrl">ASR Server URL (Optional):</label>
+            <input type="text" id="asrUrl" placeholder="asr.mydomain.com">
+            <small>Speech recognition server URL to use with voice features</small>
+        </div>
+        
         <button onclick="convertUrl()">Convert to FNWS</button>
         
         <div id="error" class="error"></div>
         
         <div id="result">
             <h3>FNWS Boot URL:</h3>
-            <p id="fnwsUrl"></p>
-            <button onclick="copyToClipboard()">Copy to Clipboard</button>
+            <p><a id="fnwsUrl" href="#"></a></p>
+            <small>(Click the link to open in your Pebble app)</small>
         </div>
     </div>
     
@@ -122,39 +128,33 @@
                 
                 // Replace rebble.io with fnws.funnyna.me
                 const fnwsDecodedUrl = decodedUrl.replace('boot.rebble.io/api/stage2/', 'boot-patcher.fnws.funnyna.me/');
+                //const fnwsDecodedUrl = decodedUrl.replace('boot.rebble.io/api/stage2/', 'localhost:3000/');
+                
+                // Get ASR URL if provided
+                const asrUrl = document.getElementById('asrUrl').value.trim();
+                
+                // Add ASR URL parameter if provided
+                let finalDecodedUrl = fnwsDecodedUrl;
+                if (asrUrl) {
+                    // Check if URL already has parameters
+                    const separator = finalDecodedUrl.includes('?') ? '&' : '?';
+                    finalDecodedUrl = `${finalDecodedUrl}${separator}asr_url=${encodeURIComponent(asrUrl)}`;
+                }
                 
                 // Re-encode the URL
-                const fnwsEncodedUrl = encodeURIComponent(fnwsDecodedUrl);
+                const fnwsEncodedUrl = encodeURIComponent(finalDecodedUrl);
                 
                 // Create the final FNWS URL
                 const fnwsUrl = `pebble://custom-boot-config-url/${fnwsEncodedUrl}`;
                 
                 // Show the result
-                document.getElementById('fnwsUrl').textContent = fnwsUrl;
+                const fnwsLink = document.getElementById('fnwsUrl');
+                fnwsLink.textContent = fnwsUrl;
+                fnwsLink.href = fnwsUrl;
                 resultDiv.style.display = 'block';
             } catch (e) {
                 errorDiv.textContent = 'Error processing URL: ' + e.message;
             }
-        }
-        
-        function copyToClipboard() {
-            const fnwsUrl = document.getElementById('fnwsUrl').textContent;
-            
-            navigator.clipboard.writeText(fnwsUrl)
-                .then(() => {
-                    alert('URL copied to clipboard!');
-                })
-                .catch(err => {
-                    console.error('Failed to copy: ', err);
-                    // Fallback for older browsers
-                    const textArea = document.createElement('textarea');
-                    textArea.value = fnwsUrl;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    alert('URL copied to clipboard!');
-                });
         }
     </script>
 </body>

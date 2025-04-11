@@ -8,6 +8,7 @@ const server = Bun.serve({
       const method = req.method;
       const args = url.searchParams;
       const access_token = args.get('access_token');
+      const asr_url = args.get('asr_url');
       if (url.pathname === '/favicon.ico') {
         return new Response(null, { status: 204 });
       }
@@ -44,7 +45,19 @@ const server = Bun.serve({
           "provider_name": "Open-Meteo",
           "url": "https://weather.fnws.funnyna.me/weather?lat=$$latitude$$&lon=$$longitude$$&units=$$units$$"
         }
-        
+
+        if (asr_url) {
+          boot_res.data.config.voice = {
+            languages: [
+              {
+                "endpoint": asr_url,
+                "four_char_locale": "Auto",
+                "six_char_locale": "ato-ATO",
+              }
+            ]
+          }
+        }
+
         // Convert axios response to Bun Response
         return Response.json(boot_res.data);
       } catch (error) {
